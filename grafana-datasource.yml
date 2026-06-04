@@ -1,0 +1,17 @@
+# Automatsko dodavanje Elasticsearch data source-a u Grafanu.
+apiVersion: 1
+
+datasources:
+  - name: Elasticsearch
+    uid: elasticsearch-web-logs
+    type: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    database: "${ELASTICSEARCH_INDEX}"
+    jsonData:
+      index: "${ELASTICSEARCH_INDEX}"
+      timeField: "timestamp"
+      esVersion: "8.0.0"
+      maxConcurrentShardRequests: 5
+    isDefault: true
+    editable: true

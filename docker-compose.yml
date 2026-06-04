@@ -1,0 +1,46 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-9.4.2}
+    container_name: ${ELASTICSEARCH_CONTAINER_NAME:-elasticsearch}
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false" # samo za lokalni development
+      ES_JAVA_OPTS: ${ES_JAVA_OPTS:--Xms1g -Xmx1g}
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION:-9.4.2}
+    container_name: ${KIBANA_CONTAINER_NAME:-kibana}
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-13.0.2}
+    container_name: ${GRAFANA_CONTAINER_NAME:-grafana}
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  es_data:
+  grafana_data:
